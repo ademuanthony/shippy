@@ -1,12 +1,14 @@
 package main
 
 import (
+
+	// Import the generated protobuf code
 	"fmt"
 	"log"
 
 	pb "github.com/ademuanthony/shippy/consignment-service/proto/consignment"
 	vesselProto "github.com/ademuanthony/shippy/vessel-service/proto/vessel"
-	micro "github.com/micro/go-micro"
+	"github.com/micro/go-micro"
 	"os"
 )
 

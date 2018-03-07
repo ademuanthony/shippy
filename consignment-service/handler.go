@@ -5,6 +5,7 @@ import (
 	"golang.org/x/net/context"
 	pb "github.com/ademuanthony/shippy/consignment-service/proto/consignment"
 	vesselProto "github.com/ademuanthony/shippy/vessel-service/proto/vessel"
+	"gopkg.in/mgo.v2"
 )
 
 // Service should implement all of the methods to satisfy the service
@@ -12,6 +13,7 @@ import (
 // in the generated code itself for the exact method signatures etc
 // to give you a better idea.
 type service struct {
+	session *mgo.Session
 	vesselClient vesselProto.VesselServiceClient
 }
 
@@ -23,8 +25,8 @@ func (s *service) GetRepo() Repository {
 // which is a create method, which takes a context and a request as an
 // argument, these are handled by the gRPC server.
 func (s *service) CreateConsignment(ctx context.Context, req *pb.Consignment, res *pb.Response) error {
-	repo := s.GetRepo()
-	defer repo.Close()
+	defer s.GetRepo().Close()
+
 	// Here we call a client instance of our vessel service with our consignment weight,
 	// and the amount of containers as the capacity value
 	vesselResponse, err := s.vesselClient.FindAvailable(context.Background(), &vesselProto.Specification{
@@ -41,7 +43,7 @@ func (s *service) CreateConsignment(ctx context.Context, req *pb.Consignment, re
 	req.VesselId = vesselResponse.Vessel.Id
 
 	// Save our consignment
-	err = repo.Create(req)
+	err = s.GetRepo().Create(req)
 	if err != nil {
 		return err
 	}
@@ -54,9 +56,8 @@ func (s *service) CreateConsignment(ctx context.Context, req *pb.Consignment, re
 }
 
 func (s *service) GetConsignments(ctx context.Context, req *pb.GetRequest, res *pb.Response) error {
-	repo := s.GetRepo()
-	defer repo.Close()
-	consignments, err := repo.GetAll()
+	defer s.GetRepo().Close()
+	consignments, err := s.GetRepo().GetAll()
 	if err != nil {
 		return err
 	}
